@@ -1,7 +1,0 @@
-seed =  5 traits =  1 K =  10 
-Training: part  1  in  10 
-Round  1 
- Goal of obj  5e-04 
-Temperature range:  62.5 1e-07 
-Cycle 1Round 1
-Iter 500000 pBad 0.999973 T 56.4808 Obj 14.6298 Rho 0 GRdif 14.6298 success 147016 failure 6 obj_new 14.6298 SA_pAcc 1 Delta 0.0349174 SA_r 0.473466 freedomratio 0.357762

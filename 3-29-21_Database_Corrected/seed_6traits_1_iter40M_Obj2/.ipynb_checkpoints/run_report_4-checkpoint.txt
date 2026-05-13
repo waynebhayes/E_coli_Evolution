@@ -1,0 +1,5 @@
+seed =  6 traits =  1 
+Training: part  4 
+Training: part  4 
+Round  1 
+ Goal of obj  0.03 

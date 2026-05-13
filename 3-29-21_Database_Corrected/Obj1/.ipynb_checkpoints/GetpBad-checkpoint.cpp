@@ -1,3 +1,16 @@
+// PURPOSE:
+//   Estimates the average probability of accepting a "bad" move
+//   (a move that worsens the objective) at a given temperature T
+//   in the simulated annealing (SA) framework.
+
+
+//Ex. GetpBad(T=1)    → returns pBad=0.3  (too cold, try hotter)
+//GetpBad(T=10)   → returns pBad=0.7  (still too cold)
+//GetpBad(T=100)  → returns pBad=0.99 (too hot, go back)
+//GetpBad(T=50)   → returns pBad=0.98 ✓ → this would be ideal for Tinit
+
+//we want to be able to know what the probability of accepting a bad move is throughout all the temperatures. (not too high near the end; and not too low near the start)
+
 #include <fstream>
 #include <iostream>
 #include <algorithm>
@@ -16,7 +29,8 @@ double GetpBad(NumericMatrix G, NumericMatrix E, NumericMatrix X_tr,NumericMatri
 
 //[[Rcpp::export]]
 double GetpBad(NumericMatrix G, NumericMatrix E, NumericMatrix X_tr,NumericMatrix Y_tr, NumericVector GR_tr, double SA_T, NumericVector GR_tr_weights){
-	
+
+    //high objectve is bad and means predictions are mostly wrong while obj == 1 means perfect predictions
 	double obj = 1e30;
 	int traits = G.nrow(), genes = G.ncol(), envi = E.ncol();
     	int SA_iter = 0, counter_bad = 0, N = 500000;
@@ -95,7 +109,7 @@ double GetpBad(NumericMatrix G, NumericMatrix E, NumericMatrix X_tr,NumericMatri
 		freedomratio = (float) freedomavail / (float) freedomusing;
 		if (perturborzero <= freedomratio) {
 			coerce_to_zero = 'N';
-			delta = R::runif(-pBad/10, pBad/10);
+			delta = R::runif(-pBad, pBad);
 			if (ISNAN(delta)){
 				cout<<"Nan found in Delta!"<<endl;
 				cout<<" Delta "<<delta<<" pBad "<<pBad<<" sumCirc "<<sumCirc<<endl;
@@ -108,6 +122,13 @@ double GetpBad(NumericMatrix G, NumericMatrix E, NumericMatrix X_tr,NumericMatri
 			        temp_value = G( whichRow, whichCol );			
 				temp_vector = TG_tr( whichRow, _ );
 				G( whichRow, whichCol ) += delta;
+                if (G(whichRow, whichCol) > 1.0) {
+                    G(whichRow, whichCol) = 1.0;
+                }
+                if (G(whichRow, whichCol) < -1.0) {
+                    G(whichRow, whichCol) = -1.0;
+                }
+                delta = G(whichRow, whichCol) - temp_value;
      				TG_tr( whichRow, _ ) = TG_tr( whichRow, _ ) + delta * X_tr( whichCol, _ );
 			} else {
 				if (E( whichRow, whichCol ) == 0){
@@ -116,6 +137,15 @@ double GetpBad(NumericMatrix G, NumericMatrix E, NumericMatrix X_tr,NumericMatri
 			        temp_value = E( whichRow, whichCol );			
 				temp_vector = TE_tr( whichRow, _ );
 				E( whichRow, whichCol ) += delta;
+                if (E(whichRow, whichCol) > 1.0) {
+                    E(whichRow, whichCol) = 1.0;
+                }
+                if (E(whichRow, whichCol) < -1.0) {
+                    E(whichRow, whichCol) = -1.0;
+                }
+                delta = E(whichRow, whichCol) - temp_value;
+
+                
      				TE_tr( whichRow, _ ) = TE_tr( whichRow, _ ) + delta * Y_tr( whichCol, _ );
     			}
 		} else {
